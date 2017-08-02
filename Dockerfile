@@ -1,17 +1,20 @@
-# Use 1science/sbt as parent image
-FROM 1science/sbt
+FROM ysihaoy/scala-play:2.12.2-2.6.0-sbt-0.13.15
 
-# Set the working directory to /app
-WORKDIR /app
+# caching dependencies
+COPY ["build.sbt", "/tmp/build/"]
+COPY ["project/plugins.sbt", "project/build.properties", "/tmp/build/project/"]
+RUN cd /tmp/build && \
+ sbt compile && \
+ sbt test:compile && \
+ rm -rf /tmp/build
 
-# Copy the current directory contents into the container at /app
-ADD . /app
+# copy code
+COPY . /root/app/
+WORKDIR /root/app
+RUN sbt compile && sbt test:compile
 
-# Install any needed packages specified in requirements.txt
-# RUN pip install -r requirements.txt
+# container port
+EXPOSE 9000
 
-# Make port 80 available to the world outside this container
-EXPOSE 9000 
-
-# Define default command. 
-CMD sbt "run"
+# default command
+ENTRYPOINT ["sbt", "run"]
